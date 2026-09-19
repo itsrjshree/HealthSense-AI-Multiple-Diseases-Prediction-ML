@@ -72,7 +72,12 @@ def load_models():
         models = {
             'diabetes': pickle.load(open(os.path.join(working_dir, 'saved_models', 'diabetes_model.sav'), 'rb')),
             'heart': pickle.load(open(os.path.join(working_dir, 'saved_models', 'heart_model.sav'), 'rb')),
-            'parkinsons': pickle.load(open(os.path.join(working_dir, 'saved_models', 'parkinsons_model.pkl'), 'rb'))
+            'parkinsons': pickle.load(open(os.path.join(working_dir, 'saved_models', 'parkinsons_model.pkl'), 'rb')),
+            # Fitted StandardScalers — MUST be applied before calling .predict(),
+            # since every model was trained on scaled features (see Notebooks/*.ipynb).
+            'diabetes_scaler': pickle.load(open(os.path.join(working_dir, 'saved_models', 'diabetes_scaler.sav'), 'rb')),
+            'heart_scaler': pickle.load(open(os.path.join(working_dir, 'saved_models', 'heart_scaler.sav'), 'rb')),
+            'parkinsons_scaler': pickle.load(open(os.path.join(working_dir, 'saved_models', 'scaler.pkl'), 'rb')),
         }
         return models
     except Exception as e:
@@ -223,8 +228,9 @@ elif selected == 'Diabetes':
                          insulin, bmi, diabetes_pedigree, age]
             
             # Get prediction and probability
-            prediction = models['diabetes'].predict([user_input])[0]
-            proba = models['diabetes'].predict_proba([user_input])[0][1]
+            scaled_input = models['diabetes_scaler'].transform([user_input])
+            prediction = models['diabetes'].predict(scaled_input)[0]
+            proba = models['diabetes'].predict_proba(scaled_input)[0][1]
             
             # Display results
             with st.container():
@@ -264,7 +270,7 @@ elif selected == 'Diabetes':
                     # Try permutation importance first
                     result = permutation_importance(
                         models['diabetes'],
-                        np.array([user_input]),
+                        scaled_input,
                         np.array([prediction]),
                         n_repeats=5,
                         random_state=42
@@ -361,8 +367,9 @@ elif selected == 'Heart Disease':
                          restecg_val, thalach, exang_val, oldpeak, slope_val, ca, thal_val]
             
             # Get prediction and probability
-            prediction = models['heart'].predict([user_input])[0]
-            proba = models['heart'].predict_proba([user_input])[0][1]
+            scaled_input = models['heart_scaler'].transform([user_input])
+            prediction = models['heart'].predict(scaled_input)[0]
+            proba = models['heart'].predict_proba(scaled_input)[0][1]
             
             # Display results
             with st.container():
@@ -473,8 +480,9 @@ elif selected == 'Parkinsons':
                          APQ, DDA, NHR, HNR, RPDE, DFA, spread1, spread2, D2, PPE]
             
             # Get prediction and probability
-            prediction = models['parkinsons'].predict([user_input])[0]
-            proba = models['parkinsons'].predict_proba([user_input])[0][1]
+            scaled_input = models['parkinsons_scaler'].transform([user_input])
+            prediction = models['parkinsons'].predict(scaled_input)[0]
+            proba = models['parkinsons'].predict_proba(scaled_input)[0][1]
             
             # Display results
             with st.container():
